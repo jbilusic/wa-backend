@@ -4,6 +4,15 @@ const PORT = 3000;
 app.use(express.json());
 app.use(express.urlencoded({extended: false}))
 
+//cors
+const cors = require('cors');
+var corsOptions = {
+    origin: 'http://127.0.0.1:5173',
+    optionsSuccessStatus: 200, // some legacy browsers (IE11, various SmartTVs) choke on 204
+    credentials:true
+  }
+app.use(cors(corsOptions))
+
 //routes
 const usersRoute= require('./routes/users')
 const articleRoute= require('./routes/articles')

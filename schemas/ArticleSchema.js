@@ -11,6 +11,10 @@ const ArticleSchema = new mongoose.Schema({
         type: mongoose.SchemaTypes.String,
         required: true
     },
+    img: {
+        type: mongoose.SchemaTypes.String,
+        required: true
+    },
     postDate: {
         type: mongoose.SchemaTypes.Date,
         default: () =>  new Date().toLocaleString(),
