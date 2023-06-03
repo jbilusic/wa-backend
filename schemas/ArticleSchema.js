@@ -23,6 +23,10 @@ const ArticleSchema = new mongoose.Schema({
     content: {
         type: [mongoose.SchemaTypes.String],
         required: true
+    },
+    views: {
+        type: Number,
+        required: true
     }
 });
 

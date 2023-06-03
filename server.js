@@ -13,6 +13,14 @@ var corsOptions = {
   }
 app.use(cors(corsOptions))
 
+//img
+const fs = require('fs');
+const uploadDir = './images';
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir);
+}
+app.use("/images",express.static('images'));
+
 //routes
 const usersRoute= require('./routes/users')
 const articleRoute= require('./routes/articles')
