@@ -36,6 +36,7 @@ router.post('/search', async (req, res) => {
     console.log(req.body);
     let search = req.body.search;
     let regex = new RegExp(search, 'i'); // create a regular expression to match the search term (case-insensitive)
+    console.log(regex);
     let articles = await database.getDb().collection('articles').find({ title: { $regex: regex } }).toArray(); // use the $regex operator to match the title field with the regular expression
     if (articles.length === 0) {
       console.log(`No articles found matching ${search}`);
@@ -87,6 +88,7 @@ router.post('/add', upload.single('img'), async (req, res) => {
     article.content = req.body.content;
     article.img = img;
     article.views =0;
+    article.postDate = Date.now;
 
     let result = await database.getDb().collection('articles').insertOne(article)
 
@@ -153,4 +155,47 @@ router.delete('/delete/:id', async (req, res) => {
 });
 
 
+router.get('/latest', async (req, res) => {
+  try {
+    let article = await database.getDb().collection('articles')
+      .find()
+      .sort({ postDate: -1 })
+      .limit(1)
+      .toArray();
+
+    if (article.length === 0) {
+      console.log('No articles found');
+      res.status(404).send('No articles found');
+    } else {
+      console.log('Latest article found');
+      res.status(200).send(article);
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).send('Server error');
+  }
+});
+let i = 4;
+router.get('/latestArticles', async (req, res) => {
+  try {
+    const start = parseInt(req.query.start) || 1; 
+    let articles = await database.getDb().collection('articles')
+      .find()
+      .sort({ postDate: -1 })
+      .skip(start) // Skip the first article
+      .limit(4) // Retrieve the next four articles
+      .toArray();
+
+    if (articles.length === 0) {
+      console.log('No articles found');
+      res.status(404).send('No articles found');
+    } else {
+      console.log(`${articles.length} latest articles found`);
+      res.status(200).send(articles);
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).send('Server error');
+  }
+});
 module.exports = router;

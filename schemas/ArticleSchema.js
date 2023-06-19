@@ -16,9 +16,9 @@ const ArticleSchema = new mongoose.Schema({
         required: true
     },
     postDate: {
-        type: mongoose.SchemaTypes.Date,
-        default: () =>  new Date().toLocaleString(),
-        immutable:true
+        type : Date,
+        default: Date.now,
+        required: true
     },
     content: {
         type: [mongoose.SchemaTypes.String],
