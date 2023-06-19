@@ -1,7 +1,5 @@
 const mongoose = require('mongoose');
 
-
-
 const ArticleSchema = new mongoose.Schema({
     author: {
         type: mongoose.SchemaTypes.String,
@@ -27,7 +25,12 @@ const ArticleSchema = new mongoose.Schema({
     views: {
         type: Number,
         required: true
-    }
+    },
+    comments: [
+      {
+        
+      }
+    ]
 });
 
 module.exports = mongoose.model('Article', ArticleSchema);

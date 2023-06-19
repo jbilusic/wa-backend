@@ -65,11 +65,9 @@ router.post('/add', async(req,res)=>{
             res.status(500).json({message: "Greska kod registriracije!"});  
             return;
         }
-       
     } catch (error) {
         res.status(500).send("error:" + error);  
     }
-    
 })
 
 

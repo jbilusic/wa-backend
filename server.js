@@ -24,6 +24,7 @@ app.use("/images",express.static('images'));
 //routes
 const usersRoute= require('./routes/users')
 const articleRoute= require('./routes/articles')
+const commentsRoute= require('./routes/comments')
 const db = require('./database/database');
 
 db.connectToServer();
@@ -46,6 +47,7 @@ app.listen(PORT, (error) =>{
 
 app.use('/users',usersRoute);
 app.use('/article',articleRoute);
+app.use('/comments',commentsRoute);
 
 
   

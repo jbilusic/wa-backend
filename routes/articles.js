@@ -198,4 +198,21 @@ router.get('/latestArticles', async (req, res) => {
     res.status(500).send('Server error');
   }
 });
+
+router.get('/searchByQuery', async (req, res) => {
+  let regex = new RegExp(req.query.q, 'i'); 
+  console.log(regex);
+  let articles = await database.getDb().collection('articles').find({ title: { $regex: regex } }).toArray();
+  if (articles.length === 0) {
+    console.log(`No articles found matching ${req.query.q}`);
+    res.status(200).send([]);
+  } else {
+    console.log(`Found ${articles.length} articles matching ${req.query.q}`);
+    res.status(200).send(articles);
+  }
+});
+
+
+
+
 module.exports = router;
