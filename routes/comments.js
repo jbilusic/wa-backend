@@ -3,8 +3,9 @@ const router = express.Router();
 const database = require('../database/database');
 const commentsSchema = require('../schemas/CommentsSchema');
 var ObjectId = require('mongodb').ObjectId;
-
-
+const session = require('express-session');
+const jwt = require('jsonwebtoken');
+require('dotenv').config()
 
 router.use((req,res,next)=>{
     console.log("Logging comments route");
@@ -25,7 +26,8 @@ router.get('/', async(req,res)=>{
 
 router.post('/add', async (req, res) => {
   try {
-    let username = await database.getDb().collection('users').findOne({ username: req.body.comments.username.toLowerCase() });
+    const TokenUsername = req.user.username;
+    let username = await database.getDb().collection('users').findOne({ username: TokenUsername.toLowerCase() });
     
     if (!username) {
       console.log("User does not exist in the database");
@@ -36,7 +38,7 @@ router.post('/add', async (req, res) => {
     let temp = Date.now();
     let comment = {
       id: new ObjectId(),
-      username: req.body.comments.username,
+      username: TokenUsername,
       content: req.body.comments.content,
       timestamp: temp,
       likes: {
@@ -71,9 +73,15 @@ router.post('/add', async (req, res) => {
 
 router.delete('/delete/:articleId/:commentId', async (req, res) => {
   try {
+    const TokenUsername = req.user.username;
     const articleId = req.params.articleId;
     const commentId = req.params.commentId;
-
+    let username = await database.getDb().collection('admins').findOne({ username: TokenUsername.toLowerCase() });
+    if (!username) {
+      console.log("Admin does not exist in the database");
+      res.status(401).json({ message: "Forbidden!" });
+      return;
+    }
     const result = await database.getDb().collection('articles').updateOne(
       { _id: new ObjectId(articleId) },
       { $pull: { comments: { id: new ObjectId(commentId) } } }
@@ -92,9 +100,10 @@ router.delete('/delete/:articleId/:commentId', async (req, res) => {
 // Express route handler for liking a comment
 router.put('/like', async (req, res) => {
   try {
+    const TokenUsername = req.user.username;
     const articleId = req.body.articleId;
     const commentId = req.body.commentId;
-    const user = req.body.user;
+
 
     const article = await database.getDb().collection('articles').findOne(
       { _id: new ObjectId(articleId), 'comments.id': new ObjectId(commentId) }
@@ -110,7 +119,7 @@ router.put('/like', async (req, res) => {
       return res.sendStatus(404); // Comment not found
     }
 
-    const userIndex = comment.likes.users.indexOf(user);
+    const userIndex = comment.likes.users.indexOf(TokenUsername);
 
     if (userIndex !== -1) {
       // User already liked the comment, remove their like
@@ -118,7 +127,7 @@ router.put('/like', async (req, res) => {
       comment.likes.count--;
     } else {
       // User has not liked the comment before, add their like
-      comment.likes.users.push(user);
+      comment.likes.users.push(TokenUsername);
       comment.likes.count++;
     }
 
@@ -137,6 +146,7 @@ router.put('/like', async (req, res) => {
 
 router.put('/dislike', async (req, res) => {
   try {
+    const TokenUsername = req.user.username;
     const articleId = req.body.articleId;
     const commentId = req.body.commentId;
     const user = req.body.user;
@@ -155,7 +165,7 @@ router.put('/dislike', async (req, res) => {
       return res.sendStatus(404); // Comment not found
     }
 
-    const userIndex = comment.dislikes.users.indexOf(user);
+    const userIndex = comment.dislikes.users.indexOf(TokenUsername);
 
     if (userIndex !== -1) {
       // User already liked the comment, remove their like
@@ -163,7 +173,7 @@ router.put('/dislike', async (req, res) => {
       comment.dislikes.count--;
     } else {
       // User has not liked the comment before, add their like
-      comment.dislikes.users.push(user);
+      comment.dislikes.users.push(TokenUsername);
       comment.dislikes.count++;
     }
 

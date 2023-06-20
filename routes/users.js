@@ -21,7 +21,6 @@ router.get('/', async(req,res)=>{
     }
 })
 
-
 router.post('/search', async(req,res)=>{
     let user = await database.getDb().collection('users').find({ username: req.body.username})
     user = await user.toArray()
@@ -52,7 +51,7 @@ router.post('/add', async(req,res)=>{
 
         const hashedPassword = await bcrypt.hash(req.body.password, 10)
         let user = new userSchema();
-        user.email=req.body.email;
+        user.email = req.body.email;
         user.password = hashedPassword;
         user.username = req.body.username
 
