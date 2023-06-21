@@ -4,7 +4,6 @@ require('dotenv').config()
 const PORT = 3000;
 app.use(express.json());
 app.use(express.urlencoded({extended: false}))
-
 const jwt = require('jsonwebtoken');
 
 const authMiddleware = require('./authMiddleware.js');
@@ -14,7 +13,7 @@ const cors = require('cors');
 var corsOptions = {
     origin: 'http://127.0.0.1:5173',
     optionsSuccessStatus: 200, // some legacy browsers (IE11, various SmartTVs) choke on 204
-    credentials:true
+    credentials: true
   }
 app.use(cors(corsOptions))
 
@@ -49,9 +48,9 @@ app.listen(PORT, (error) =>{
         console.log("error ne moze se spojit na port i error je", error);
 })
 
-app.get('/protected', authenticateToken, (req, res) => {
+/* app.get('/protected', authenticateToken, (req, res) => {
   res.json({ message: 'Protected endpoint reached!' });
-});
+}); */
 
 function authenticateToken(req, res, next) {
   const authHeader = req.headers.authorization;
@@ -72,6 +71,58 @@ function authenticateToken(req, res, next) {
     res.status(401).json({ error: 'Token not provided or malformed' });
   }
 }
+function authenticateTokenUsername(req, res, next) {
+  const authHeader = req.headers.authorization;
+
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    const token = authHeader.substring(7); // Extract the token from the Authorization header
+    // Verify the token
+    let response={
+      username: 'guest',
+      admin:false
+    }
+    jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
+      if (err) {
+        
+        return res.status(200).json({response });
+      } else {
+        // Token is valid, store the decoded information in the request object
+        req.user = decoded;
+        next();
+      }
+    });
+  } else {
+  
+    return res.status(200).json({ response });
+  }
+}
+app.get('/',authenticateTokenUsername, async (req, res) =>{
+  try {
+    const TokenUsername = req.user.username;
+    console.log(TokenUsername);
+    let response={
+      username: TokenUsername,
+      admin:false
+    }
+    let username = await db.getDb().collection('admins').findOne({ username: TokenUsername.toLowerCase() })
+    if (username == null) {
+      console.log("Nije admin, sakrij stvari");
+      
+      return res.status(200).json({response});
+    }else{
+      response.admin=true;
+      return res.status(200).json({response});
+    }
+    
+  } catch (error) {
+    let response={
+      username: "guest",
+      admin:false
+    }
+    console.log(error);
+    return res.status(200).json({ response });
+  }
+})
 
 app.use('/users',usersRoute);
 app.use('/login',loginRoute);

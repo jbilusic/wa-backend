@@ -6,8 +6,6 @@ const path = require('path')
 var ObjectId = require('mongodb').ObjectId;
 
 
-
-
 router.get('/', async(req,res)=>{
     try {
         const articles = await database.getDb().collection("articles").find();

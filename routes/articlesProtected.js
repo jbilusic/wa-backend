@@ -40,7 +40,6 @@ router.get('/', async(req,res)=>{
 
   
   
-
 router.post('/add', upload.single('img'), async (req, res) => {
   try {
     
