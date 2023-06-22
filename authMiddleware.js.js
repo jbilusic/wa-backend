@@ -22,8 +22,6 @@ function authenticateToken(req, res, next) {
     res.status(401).json({ error: 'Token not provided' });
   }
   const token = req.headers.authorization;
-
- 
 }
 
 module.exports = {

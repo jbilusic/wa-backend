@@ -100,7 +100,7 @@ app.get('/',authenticateTokenUsername, async (req, res) =>{
   try {
     const TokenUsername = req.user.username;
     console.log(TokenUsername);
-    let response={
+    let response = {
       username: TokenUsername,
       admin:false
     }
@@ -124,7 +124,7 @@ app.get('/',authenticateTokenUsername, async (req, res) =>{
   }
 })
 
-app.use('/users',usersRoute);
+app.use('/users',authenticateToken,usersRoute);
 app.use('/login',loginRoute);
 app.use('/article',articleRoute);
 app.use('/protectedArticle',authenticateToken,protectedArticle);

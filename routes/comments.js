@@ -58,7 +58,12 @@ router.post('/add', async (req, res) => {
       { $push: { comments: comment } }
     );
 
-    if (result) {
+    let userResult = await database.getDb().collection('users').updateOne(
+      { username: TokenUsername.toLowerCase() },
+      { $inc: { numOfComments: 1 } }
+    );
+
+    if (result && userResult) {
       return res.status(201).json({ comment });
     } else {
       res.status(500).json({ message: "Error updating the article!" });
@@ -104,16 +109,15 @@ router.put('/like', async (req, res) => {
     const articleId = req.body.articleId;
     const commentId = req.body.commentId;
 
-
     const article = await database.getDb().collection('articles').findOne(
       { _id: new ObjectId(articleId), 'comments.id': new ObjectId(commentId) }
     );
 
-    if (!article) {
+    if (!article || !article.comments) {
       return res.sendStatus(404); // Comment or article not found
     }
 
-    const comment = article.comments.find(c => c.id.toString() === commentId);
+    const comment = article.comments.find(c => c.id && c.id.toString() === commentId);
 
     if (!comment) {
       return res.sendStatus(404); // Comment not found
@@ -125,10 +129,18 @@ router.put('/like', async (req, res) => {
       // User already liked the comment, remove their like
       comment.likes.users.splice(userIndex, 1);
       comment.likes.count--;
+      let userResult = await database.getDb().collection('users').updateOne(
+        { username: TokenUsername.toLowerCase() },
+        { $inc: { numOfReactions: -1 } }
+      );
     } else {
       // User has not liked the comment before, add their like
       comment.likes.users.push(TokenUsername);
       comment.likes.count++;
+      let userResult = await database.getDb().collection('users').updateOne(
+        { username: TokenUsername.toLowerCase() },
+        { $inc: { numOfReactions: 1 } }
+      );
     }
 
     await database.getDb().collection('articles').updateOne(
@@ -138,10 +150,10 @@ router.put('/like', async (req, res) => {
 
     res.sendStatus(200); // Like action processed successfully
   } catch (error) {
+    console.log(error);
     res.status(500).send("Error: " + error);
   }
 });
-
 
 
 router.put('/dislike', async (req, res) => {
@@ -155,11 +167,11 @@ router.put('/dislike', async (req, res) => {
       { _id: new ObjectId(articleId), 'comments.id': new ObjectId(commentId) }
     );
 
-    if (!article) {
+    if (!article || !article.comments) {
       return res.sendStatus(404); // Comment or article not found
     }
 
-    const comment = article.comments.find(c => c.id.toString() === commentId);
+    const comment = article.comments.find(c => c.id && c.id.toString() === commentId);
 
     if (!comment) {
       return res.sendStatus(404); // Comment not found
@@ -168,13 +180,21 @@ router.put('/dislike', async (req, res) => {
     const userIndex = comment.dislikes.users.indexOf(TokenUsername);
 
     if (userIndex !== -1) {
-      // User already liked the comment, remove their like
+      // User already disliked the comment, remove their dislike
       comment.dislikes.users.splice(userIndex, 1);
       comment.dislikes.count--;
+      let userResult = await database.getDb().collection('users').updateOne(
+        { username: TokenUsername.toLowerCase() },
+        { $inc: { numOfReactions: -1 } }
+      );
     } else {
-      // User has not liked the comment before, add their like
+      // User has not disliked the comment before, add their dislike
       comment.dislikes.users.push(TokenUsername);
       comment.dislikes.count++;
+      let userResult = await database.getDb().collection('users').updateOne(
+        { username: TokenUsername.toLowerCase() },
+        { $inc: { numOfReactions: 1 } }
+      );
     }
 
     await database.getDb().collection('articles').updateOne(
@@ -182,7 +202,7 @@ router.put('/dislike', async (req, res) => {
       { $set: { 'comments.$': comment } }
     );
 
-    res.sendStatus(200); // Like action processed successfully
+    res.sendStatus(200); // Dislike action processed successfully
   } catch (error) {
     res.status(500).send("Error: " + error);
   }

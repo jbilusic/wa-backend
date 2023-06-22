@@ -3,6 +3,7 @@ const router = express.Router();
 const database = require('../database/database');
 const userSchema = require('../schemas/UsersSchema');
 const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
 
 let users;
 router.use((req,res,next)=>{
@@ -24,7 +25,7 @@ router.get('/', async(req,res)=>{
 router.post('/search', async(req,res)=>{
     let user = await database.getDb().collection('users').find({ username: req.body.username})
     user = await user.toArray()
-    if(user==""){
+    if(user == ""){
         console.log("taj username ne postoji u bazi");
         res.status(404).send("Ne postoji");
         return;
@@ -43,17 +44,20 @@ router.post('/add', async(req,res)=>{
             res.status(403).json({ message: "Username vec postoji!"});
             return;
         }
-        if(email!=""){
+        if(email != ""){
             console.log("Email je vec registriran");
             res.status(403).json({ message: "Email vec postoji!"});
             return;
         }
-
+        let temp = Date.now();
         const hashedPassword = await bcrypt.hash(req.body.password, 10)
         let user = new userSchema();
         user.email = req.body.email;
         user.password = hashedPassword;
-        user.username = req.body.username
+        user.timestamp = temp;
+        user.numOfComments = 0;
+        user.numOfReactions = 0;
+        user.bookmarks = [];
 
         let result = await database.getDb().collection('users').insertOne(user)
         if (result.insertedId){
@@ -69,6 +73,81 @@ router.post('/add', async(req,res)=>{
     }
 })
 
+router.get('/profile', async (req, res) =>{
+    try {
+      const TokenUsername = req.user.username;
+      console.log(TokenUsername);
+      let username = await database.getDb().collection('users').findOne({ username: TokenUsername.toLowerCase() })
+      if (username != null) {
+        let response={
+            username: username.username,
+            comments: username.numOfComments,
+            reactions: username.numOfReactions,
+            created: username.timestamp,
+            bookmarks: username.bookmarks
+        }
+        console.log(response);
+        return res.status(200).json({response});
+      }else{
+        let admin = await database.getDb().collection('admins').findOne({ username: TokenUsername.toLowerCase() })
+        if (username != null) {
+            let response={
+                username: username.username,
+                comments: username.numOfComments,
+                reactions: username.numOfReactions,
+                created: username.timestamp,
+                bookmarks: username.bookmarks
+            }
+        return res.status(200).json({response});
+      }
+      else{
+        return res.status(404).json({msg:"not found"});
+      }
+      
+    }
+    }
+     catch (error) {
+      console.log(error);
+      return res.status(500).json({msg:"not found2"});
+    }
+  })
+    
+
+  router.get('/bookmark/:id', async (req, res) => {
+    const TokenUsername = req.user.username;
+    const articleId = req.params.id;
+    console.log(articleId);
+    try {
+      const user = await database.getDb().collection('users').findOne({ username: TokenUsername.toLowerCase() });
+      if (user != null) {
+        const bookmarkIndex = user.bookmarks.indexOf(articleId);
+        if (bookmarkIndex !== -1) {
+            console.log("removed");
+          user.bookmarks.splice(bookmarkIndex, 1);
+          await database.getDb().collection('users').updateOne(
+            { username: TokenUsername.toLowerCase() },
+            { $pull: { bookmarks: articleId } }
+           
+          );
+          return res.status(200).json({ response: "Bookmark removed" });
+        } else {
+            console.log("added");
+
+          user.bookmarks.push(articleId);
+          await database.getDb().collection('users').updateOne(
+            { username: TokenUsername.toLowerCase() },
+            { $push: { bookmarks: articleId } }
+          );
+          return res.status(200).json({ response: "Bookmark added" });
+        }
+      } else {
+        return res.status(404).json("User not found");
+      }
+    } catch (error) {
+      console.log(error);
+      return res.status(500).json({ msg: "Internal Server Error" });
+    }
+  });
 
 
 module.exports = router;

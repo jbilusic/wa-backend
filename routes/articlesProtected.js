@@ -61,7 +61,7 @@ router.post('/add', upload.single('img'), async (req, res) => {
     article.title = req.body.title;
     article.content = req.body.content;
     article.img = img;
-    article.views =0;
+    article.views = 0;
     article.postDate = Date.now;
 
     let result = await database.getDb().collection('articles').insertOne(article)
