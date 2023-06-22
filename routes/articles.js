@@ -32,7 +32,7 @@ router.post('/search', async (req, res) => {
     }
   });
 
-  router.get('/getById/:id', async (req, res) => {
+  router.get('/data/:id', async (req, res) => {
  
     const articleId = req.params.id;
     console.log(articleId);

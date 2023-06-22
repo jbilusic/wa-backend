@@ -76,7 +76,7 @@ router.post('/add', async (req, res) => {
 });
 
 
-router.delete('/delete/:articleId/:commentId', async (req, res) => {
+router.delete('/:articleId/:commentId', async (req, res) => {
   try {
     const TokenUsername = req.user.username;
     const articleId = req.params.articleId;
