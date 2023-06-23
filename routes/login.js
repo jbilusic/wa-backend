@@ -30,15 +30,17 @@ router.post('/signin', async(req,res)=>{
         } else{
             let admin = await db.getDb().collection('admins').findOne({ username: req.body.username.toLowerCase()})
             if(admin){
-                if(req.body.password == admin.password){
+                if(await bcrypt.compare(req.body.password, admin.password)){
                     const username = req.body.username;
                     const token = jwt.sign({ username: username }, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1h' });   
                     return res.status(200).json({ token: token });
+                    //res.redirect('http://localhost:5173');
+                    //return res.status(200).json("Radi");
                 }
                 else{
                     console.log("neuspjesan login");
                     return res.status(401).json("Bad credentials");
-                } 
+                }       
             }
             return res.status(422).json({ error: "Username ne postoji" });
         }  
