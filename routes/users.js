@@ -33,6 +33,7 @@ router.post('/search', async(req,res)=>{
     res.status(200).send(user);
 })
 
+/*
 router.post('/add', async(req,res)=>{
     try {
         let email = await database.getDb().collection('users').find({ email: req.body.email.toLowerCase()})
@@ -72,6 +73,7 @@ router.post('/add', async(req,res)=>{
         res.status(500).send("error:" + error);  
     }
 })
+*/
 
 router.get('/profile', async (req, res) =>{
     try {
